@@ -1,4 +1,4 @@
-# [Titlul proiectului]
+# Agenda de contacte
 
 Proiect individual la disciplina Metode avansate de programare, anul universitar 2026-2027.
 
