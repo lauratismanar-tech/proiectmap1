@@ -1,10 +1,10 @@
 {
   "sablon": "map-2026-2027-v1-cpp",
-  "nume": "[Nume Prenume]",
-  "grupa": "[grupa]",
-  "marca": 0,
-  "email": "[prenume.nume@student.upt.ro]",
-  "tema": 0,
+  "nume": "Tismanar Laura-Teodora",
+  "grupa": "2.2",
+  "marca": "LH715713",
+  "email": "laura-teodora.tismanar@student.upt.ro",
+  "tema": 1,
   "limbaj": "cpp",
   "extensii": []
 }
