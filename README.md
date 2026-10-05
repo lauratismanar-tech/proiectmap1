@@ -7,11 +7,11 @@ Proiect individual la disciplina Metode avansate de programare, anul universitar
 - **Nume:** Tismanar Laura-Teodora
 - **Grupa:** 2.2
 - **Marca:** LH715713
-- **Tema:** Agenda de contacte 
+- **Tema:** 1 - Agenda de contacte
 
 ## Descriere
 
-[Doua-trei propozitii despre ce face aplicatia si ce problema rezolva.]
+Serviciu web care gestioneaza o agenda de contacte, asemanatoare cu cea din telefon. Permite adaugarea contactelor (nume, email, telefon, categorie), cautarea dupa nume, filtrarea pe categorie si stergerea lor, cu validarea datelor de intrare. Datele se pastreaza in memorie.
 
 ## Tehnologii
 
@@ -47,8 +47,14 @@ cmake --build build -j
 | `/version` | GET | Versiunea si commit-ul din care a fost construita imaginea |
 | `/` | GET | Pagina de prezentare |
 | `/reset` | POST | Goleste datele din memorie |
-| [ruta temei] | [metoda] | [descriere] |
+| `/contacts` | POST | Adauga un contact (name, email, phone, category) |
+| `/contacts` | GET | Listeaza contactele, cu filtre optionale `category` si `q`, ordonate dupa name |
+| `/contacts/{id}` | GET | Intoarce un contact sau 404 |
+| `/contacts/{id}` | DELETE | Sterge un contact (204 la succes, 404 daca nu exista) |
+| `/stats` | GET | Numarul total de contacte si numarul pe categorii |
 
 ## Decizii de implementare
 
-[Doua-trei decizii tehnice pe care le-ati luat si motivul fiecareia.]
+1. **Email-ul se compara normalizat, dar se afiseaza asa cum a fost introdus.** Unicitatea se verifica pe forma cu litere mici, iar contactul pastreaza forma scrisa de utilizator. Alternativa era sa salvez direct forma normalizata, dar atunci utilizatorul ar vedea alt text decat a introdus.
+2. **Datele se tin in memorie, intr-un container ordonat dupa id.** Id-urile sunt atribuite de server, incepand de la 1, iar `/reset` le reia de la 1. Alternativa era o baza de date, dar contractul cere stare in memorie.
+3. **Validarea se face inainte de orice modificare a starii.** Un contact invalid (400) sau duplicat (409) nu schimba lista si nu consuma un id.
