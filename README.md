@@ -1,3 +1,5 @@
+![CI](https://github.com/lauratismanar-tech/proiectmap1/actions/workflows/ci.yml/badge.svg)
+
 # Agenda de contacte
 
 Proiect individual la disciplina Metode avansate de programare, anul universitar 2026-2027.
