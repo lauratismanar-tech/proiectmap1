@@ -9,6 +9,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "store.hpp"
+
 namespace map_project {
 
 inline constexpr const char* kAppName = "map-project";
@@ -19,31 +21,6 @@ inline std::string Env(const char* key, const std::string& fallback) {
     const char* value = std::getenv(key);
     return (value == nullptr || *value == '\0') ? fallback : std::string(value);
 }
-
-/// Holds the application data in memory.
-/// Everything is lost when the container restarts. Add your theme's structures here.
-class Store {
-public:
-    void Reset() {
-        std::lock_guard<std::mutex> guard(mutex_);
-        next_id_ = 1;
-    }
-
-    int NextId() {
-        std::lock_guard<std::mutex> guard(mutex_);
-        return next_id_;
-    }
-
-    int TakeNextId() {
-        std::lock_guard<std::mutex> guard(mutex_);
-        return next_id_++;
-    }
-
-private:
-    std::mutex mutex_;
-    int next_id_ = 1;
-    // example: std::map<int, Contact> contacts_;
-};
 
 /// Seconds since the process started.
 inline long UptimeSeconds(std::chrono::steady_clock::time_point started_at) {
@@ -73,8 +50,8 @@ inline std::string HomePage() {
 <html lang="ro"><head><meta charset="utf-8"><title>)") + kAppName + R"(</title></head>
 <body>
 <h1>)" + kAppName + R"(</h1>
-<p>Autor: NUME PRENUME, grupa GRUPA</p>
-<p>Tema: NUMARUL TEMEI</p>
+<p>Autor: Tismanar Laura-Teodora, grupa 2.2</p>
+<p>Tema: 1 - Agenda de contacte</p>
 <p>Versiune: )" + kAppVersion + ", commit " + Env("APP_COMMIT", "dev") + R"(</p>
 </body></html>)";
 }
