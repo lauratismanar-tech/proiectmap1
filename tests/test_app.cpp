@@ -5,6 +5,8 @@
 
 #include "app.hpp"
 #include "contacts.hpp"
+##include "contact_api.hpp"
+
 
 using namespace map_project;
 
@@ -306,4 +308,103 @@ TEST_CASE("reset_clears_contacts_and_restarts_ids") {
 
     CHECK(store.Stats().total == 0);
     CHECK(store.AddContact(MakeContact("Bob", "b@example.com"))->id == 1);
+}
+
+// ---- HTTP layer: contact parsing and JSON (theme 1) ----
+
+namespace {
+
+std::string ContactBody(const std::string& name, const std::string& email,
+                        const std::string& phone, const std::string& category) {
+    return nlohmann::json{{"name", name},
+                          {"email", email},
+                          {"phone", phone},
+                          {"category", category}}
+        .dump();
+}
+
+}  // namespace
+
+TEST_CASE("parses_a_valid_contact_body") {
+    const auto parsed =
+        ParseContact(ContactBody("Ana Pop", "ana@example.com", "0722334455", "work"));
+
+    REQUIRE(parsed.ok);
+    CHECK(parsed.contact.name == "Ana Pop");
+    CHECK(parsed.contact.email == "ana@example.com");
+    CHECK(parsed.contact.category == "work");
+}
+
+TEST_CASE("rejects_body_that_is_not_json") {
+    CHECK_FALSE(ParseContact("this is not json").ok);
+}
+
+TEST_CASE("rejects_json_that_is_not_an_object") {
+    CHECK_FALSE(ParseContact("[1, 2, 3]").ok);
+}
+
+TEST_CASE("rejects_body_with_a_missing_field") {
+    const std::string body = R"json({"name":"Ana","phone":"0722334455","category":"work"})json";
+    CHECK_FALSE(ParseContact(body).ok);
+}
+
+TEST_CASE("rejects_phone_sent_as_a_number") {
+    const std::string body =
+        R"json({"name":"Ana","email":"ana@example.com","phone":722334455,"category":"work"})json";
+    CHECK_FALSE(ParseContact(body).ok);
+}
+
+TEST_CASE("rejects_body_with_a_name_over_the_limit") {
+    const auto body = ContactBody(std::string(kMaxNameLength + 1, 'a'), "ana@example.com",
+                                  "0722334455", "work");
+    CHECK_FALSE(ParseContact(body).ok);
+}
+
+TEST_CASE("rejects_body_with_an_invalid_email") {
+    CHECK_FALSE(ParseContact(ContactBody("Ana", "ana-at-example", "0722334455", "work")).ok);
+}
+
+TEST_CASE("rejects_body_with_an_invalid_phone") {
+    CHECK_FALSE(ParseContact(ContactBody("Ana", "ana@example.com", "12345", "work")).ok);
+}
+
+TEST_CASE("rejects_body_with_an_unknown_category") {
+    CHECK_FALSE(ParseContact(ContactBody("Ana", "ana@example.com", "0722334455", "boss")).ok);
+}
+
+TEST_CASE("contact_json_has_all_fields") {
+    Contact contact;
+    contact.id = 7;
+    contact.name = "Ana";
+    contact.email = "Ana@Example.com";
+    contact.phone = "0722334455";
+    contact.category = "work";
+
+    const auto body = ContactToJson(contact);
+
+    CHECK(body["id"] == 7);
+    CHECK(body["name"] == "Ana");
+    CHECK(body["email"] == "Ana@Example.com");
+    CHECK(body["phone"] == "0722334455");
+    CHECK(body["category"] == "work");
+}
+
+TEST_CASE("stats_json_has_an_empty_object_for_a_new_store") {
+    Store store;
+    const auto body = StatsToJson(store.Stats());
+
+    CHECK(body["total"] == 0);
+    CHECK(body["by_category"].is_object());
+    CHECK(body["by_category"].empty());
+}
+
+TEST_CASE("stats_json_reports_total_and_categories") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com", "work"));
+    store.AddContact(MakeContact("Bob", "b@example.com", "work"));
+
+    const auto body = StatsToJson(store.Stats());
+
+    CHECK(body["total"] == 2);
+    CHECK(body["by_category"]["work"] == 2);
 }
