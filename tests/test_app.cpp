@@ -5,8 +5,7 @@
 
 #include "app.hpp"
 #include "contacts.hpp"
-##include "contact_api.hpp"
-
+#include "contact_api.hpp"
 
 using namespace map_project;
 
