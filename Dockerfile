@@ -13,7 +13,7 @@ RUN cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
 FROM debian:bookworm-slim
 LABEL org.opencontainers.image.title="MAP proiect" \
       org.opencontainers.image.authors="Tismanar Laura-Teodora <laura-teodora.tismanar@student.upt.ro>" \
-      org.opencontainers.image.source="https://github.com/USERUL-TAU/NUME-REPO"
+         org.opencontainers.image.source="https://github.com/lauratismanar-tech/proiectmap1"
 
 ARG COMMIT=dev
 ARG BUILT_AT=unknown
