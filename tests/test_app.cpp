@@ -407,3 +407,96 @@ TEST_CASE("stats_json_reports_total_and_categories") {
     CHECK(body["total"] == 2);
     CHECK(body["by_category"]["work"] == 2);
 }
+// ---- Edge cases: validation and store (theme 1) ----
+
+TEST_CASE("rejects_phone_made_only_of_a_plus_sign") {
+    CHECK_FALSE(IsValidPhone("+"));
+}
+
+TEST_CASE("rejects_phone_with_two_plus_signs") {
+    CHECK_FALSE(IsValidPhone("++072233445"));
+}
+
+TEST_CASE("rejects_empty_phone") {
+    CHECK_FALSE(IsValidPhone(""));
+}
+
+TEST_CASE("accepts_email_with_a_dot_in_the_local_part") {
+    CHECK(IsValidEmail("ana.pop@example.com"));
+}
+
+TEST_CASE("rejects_email_whose_only_dot_is_before_the_at_sign") {
+    CHECK_FALSE(IsValidEmail("ana.pop@example"));
+}
+
+TEST_CASE("rejects_category_written_with_capital_letters") {
+    CHECK_FALSE(IsValidCategory("Work"));
+}
+
+TEST_CASE("rejects_empty_category") {
+    CHECK_FALSE(IsValidCategory(""));
+}
+
+TEST_CASE("does_not_reuse_an_id_after_a_contact_is_deleted") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com"));
+    store.RemoveContact(1);
+
+    const auto next = store.AddContact(MakeContact("Bob", "b@example.com"));
+
+    REQUIRE(next.has_value());
+    CHECK(next->id == 2);
+}
+
+TEST_CASE("deleted_contact_no_longer_appears_in_the_list") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com"));
+    store.AddContact(MakeContact("Bob", "b@example.com"));
+    store.RemoveContact(1);
+
+    const auto list = store.ListContacts(std::nullopt, std::nullopt);
+
+    REQUIRE(list.size() == 1);
+    CHECK(list[0].name == "Bob");
+}
+
+TEST_CASE("email_of_a_deleted_contact_can_be_used_again") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "ana@example.com"));
+    store.RemoveContact(1);
+
+    CHECK(store.AddContact(MakeContact("Ana again", "ana@example.com")).has_value());
+}
+
+TEST_CASE("empty_search_returns_every_contact") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com"));
+    store.AddContact(MakeContact("Bob", "b@example.com"));
+
+    CHECK(store.ListContacts(std::nullopt, std::string("")).size() == 2);
+}
+
+TEST_CASE("search_with_no_match_returns_an_empty_list") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com"));
+
+    CHECK(store.ListContacts(std::nullopt, std::string("zzz")).empty());
+}
+
+TEST_CASE("filter_on_a_category_without_contacts_returns_an_empty_list") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com", "work"));
+
+    CHECK(store.ListContacts(std::string("family"), std::nullopt).empty());
+}
+
+TEST_CASE("stats_drop_a_category_when_its_last_contact_is_deleted") {
+    Store store;
+    store.AddContact(MakeContact("Ana", "a@example.com", "family"));
+    store.RemoveContact(1);
+
+    const auto stats = store.Stats();
+
+    CHECK(stats.total == 0);
+    CHECK(stats.by_category.empty());
+}
